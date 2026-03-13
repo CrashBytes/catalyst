@@ -1,0 +1,33 @@
+{
+  "name": "@crashbytes/catalyst",
+  "version": "1.0.0",
+  "description": "Catalyst by CrashBytes - Analyze any codebase and generate optimized Claude Code configurations (skills, agents, CLAUDE.md, settings)",
+  "main": "src/index.js",
+  "bin": {
+    "catalyst": "./bin/catalyst.js"
+  },
+  "scripts": {
+    "test": "node --test src/**/*.test.js"
+  },
+  "keywords": [
+    "claude-code",
+    "ai",
+    "codebase-analyzer",
+    "skills",
+    "agents",
+    "developer-tools",
+    "crashbytes"
+  ],
+  "author": "CrashBytes",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "plugin/",
+    "README.md",
+    "LICENSE"
+  ]
+}
