@@ -10,7 +10,15 @@
     "deploy": "npm run build && wrangler pages deploy ./build/client",
     "db:migrate:local": "wrangler d1 execute catalyst-db --local --file=migrations/0001_create_users.sql && wrangler d1 execute catalyst-db --local --file=migrations/0002_create_subscriptions.sql && wrangler d1 execute catalyst-db --local --file=migrations/0003_create_organizations.sql && wrangler d1 execute catalyst-db --local --file=migrations/0004_create_projects.sql && wrangler d1 execute catalyst-db --local --file=migrations/0005_create_analyses.sql && wrangler d1 execute catalyst-db --local --file=migrations/0006_create_cli_tokens.sql",
     "db:migrate:prod": "wrangler d1 execute catalyst-db --file=migrations/0001_create_users.sql && wrangler d1 execute catalyst-db --file=migrations/0002_create_subscriptions.sql && wrangler d1 execute catalyst-db --file=migrations/0003_create_organizations.sql && wrangler d1 execute catalyst-db --file=migrations/0004_create_projects.sql && wrangler d1 execute catalyst-db --file=migrations/0005_create_analyses.sql && wrangler d1 execute catalyst-db --file=migrations/0006_create_cli_tokens.sql",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:landing": "playwright test e2e/landing.spec.ts",
+    "test:auth": "playwright test e2e/auth.spec.ts",
+    "test:dashboard": "playwright test e2e/dashboard.spec.ts",
+    "test:billing": "playwright test e2e/billing.spec.ts",
+    "test:api": "playwright test e2e/api.spec.ts"
   },
   "dependencies": {
     "@clerk/remix": "^4.2.0",
@@ -24,6 +32,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241205.0",
+    "@playwright/test": "^1.58.2",
     "@remix-run/dev": "^2.15.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
