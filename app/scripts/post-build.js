@@ -3,32 +3,27 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const root = join(__dirname, "..");
-const clientDir = join(root, "build/client");
+const appRoot = join(__dirname, "..");
+const repoRoot = join(appRoot, "..");
 
-// Clean previous artifacts
-for (const f of ["_server"]) {
-  const p = join(clientDir, f);
-  if (existsSync(p)) rmSync(p, { recursive: true });
-}
+// Create functions directory at REPO ROOT (where Cloudflare Pages looks for it)
+const functionsDir = join(repoRoot, "functions");
+if (existsSync(functionsDir)) rmSync(functionsDir, { recursive: true });
+mkdirSync(functionsDir, { recursive: true });
 
-// Copy server bundle into the client output directory
-cpSync(join(root, "build/server"), join(clientDir, "_server"), { recursive: true });
-
-// Create functions directory in the client output (Pages looks here)
-mkdirSync(join(clientDir, "functions"), { recursive: true });
+// The function imports relative to repo root /functions/ -> ../app/build/server/
 writeFileSync(
-  join(clientDir, "functions", "[[path]].js"),
+  join(functionsDir, "[[path]].js"),
   `import { createPagesFunctionHandler } from "@remix-run/cloudflare-pages";
-import * as build from "../_server/index.js";
+import * as build from "../app/build/server/index.js";
 
 export const onRequest = createPagesFunctionHandler({ build });
 `
 );
 
-// Create _routes.json to route all non-static requests through functions
+// Create _routes.json in build output to route non-static requests
 writeFileSync(
-  join(clientDir, "_routes.json"),
+  join(appRoot, "build/client/_routes.json"),
   JSON.stringify({
     version: 1,
     include: ["/*"],
@@ -36,4 +31,4 @@ writeFileSync(
   }, null, 2)
 );
 
-console.log("Post-build: Created functions handler and copied server bundle.");
+console.log("Post-build: Created /functions/[[path]].js and _routes.json");
