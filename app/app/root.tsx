@@ -14,8 +14,13 @@ import stylesheet from "~/tailwind.css?url";
 export const links = () => [{ rel: "stylesheet", href: stylesheet }];
 
 export const loader = (args: LoaderFunctionArgs) => {
+  const env = (args.context.cloudflare.env as unknown as Env);
   return rootAuthLoader(args, ({ request }) => {
-    return { ENV: {} };
+    return {
+      ENV: {
+        CLERK_PUBLISHABLE_KEY: env.CLERK_PUBLISHABLE_KEY,
+      },
+    };
   });
 };
 
