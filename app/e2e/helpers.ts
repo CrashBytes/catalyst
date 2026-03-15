@@ -1,6 +1,6 @@
 import { type Page, expect } from "@playwright/test";
 
-// Test user credentials - set these in environment or use Clerk test mode
+// Test user credentials - loaded from e2e/.env via playwright.config.ts
 export const TEST_USER = {
   email: process.env.TEST_USER_EMAIL || "test@catalyst.crashbytes.com",
   password: process.env.TEST_USER_PASSWORD || "TestPassword123!",
@@ -18,68 +18,33 @@ export const STRIPE_TEST_CARD = {
 
 /**
  * Sign in via Clerk's sign-in page.
- * Clerk renders its own UI inside an iframe or shadow DOM,
- * so we use the Clerk-specific selectors.
  */
 export async function signIn(page: Page) {
   await page.goto("/sign-in");
-  await page.waitForTimeout(2000); // Wait for Clerk to load
+  await page.waitForTimeout(2000);
 
-  // Clerk renders in the page - find the email input
+  // Fill email
   const emailInput = page.locator('input[name="identifier"]');
   await emailInput.waitFor({ timeout: 10000 });
   await emailInput.fill(TEST_USER.email);
 
-  // Click continue
-  const continueButton = page.getByRole("button", {
-    name: /continue/i,
-  });
-  await continueButton.click();
+  // Click the primary continue button (not social buttons)
+  await page
+    .getByRole("button", { name: "Continue", exact: true })
+    .click();
 
   // Enter password
   const passwordInput = page.locator('input[name="password"]');
   await passwordInput.waitFor({ timeout: 10000 });
   await passwordInput.fill(TEST_USER.password);
 
-  // Click sign in
-  const signInButton = page.getByRole("button", {
-    name: /continue/i,
-  });
-  await signInButton.click();
+  // Click continue to sign in
+  await page
+    .getByRole("button", { name: "Continue", exact: true })
+    .click();
 
   // Wait for redirect to dashboard
   await page.waitForURL("**/dashboard**", { timeout: 15000 });
-}
-
-/**
- * Sign up a new user via Clerk.
- */
-export async function signUp(page: Page) {
-  await page.goto("/sign-up");
-  await page.waitForTimeout(2000);
-
-  const emailInput = page.locator('input[name="emailAddress"]');
-  await emailInput.waitFor({ timeout: 10000 });
-  await emailInput.fill(TEST_USER.email);
-
-  const passwordInput = page.locator('input[name="password"]');
-  await passwordInput.fill(TEST_USER.password);
-
-  const firstNameInput = page.locator('input[name="firstName"]');
-  if (await firstNameInput.isVisible()) {
-    await firstNameInput.fill(TEST_USER.firstName);
-  }
-
-  const lastNameInput = page.locator('input[name="lastName"]');
-  if (await lastNameInput.isVisible()) {
-    await lastNameInput.fill(TEST_USER.lastName);
-  }
-
-  const continueButton = page.getByRole("button", { name: /continue/i });
-  await continueButton.click();
-
-  // May need to verify email - in test mode Clerk may auto-verify
-  await page.waitForURL("**/dashboard**", { timeout: 30000 });
 }
 
 /**
@@ -87,7 +52,7 @@ export async function signUp(page: Page) {
  */
 export async function ensureAuthenticated(page: Page) {
   await page.goto("/dashboard");
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(2000);
 
   // If redirected to sign-in, perform sign in
   if (page.url().includes("sign-in")) {
@@ -101,58 +66,56 @@ export async function ensureAuthenticated(page: Page) {
  * Fill Stripe checkout form with test card.
  */
 export async function fillStripeCheckout(page: Page) {
-  // Stripe Checkout is on a different domain
   await page.waitForURL(/checkout\.stripe\.com/, { timeout: 15000 });
-
-  // Wait for the form to load
   await page.waitForTimeout(3000);
 
   // Fill email if present
-  const emailField = page.locator('input[name="email"]');
+  const emailField = page.locator("#email");
   if (await emailField.isVisible()) {
     await emailField.fill(TEST_USER.email);
   }
 
-  // Fill card number - Stripe uses iframes
-  const cardFrame = page.frameLocator('iframe[name*="cardNumber"]').first();
-  if (await page.locator('iframe[name*="cardNumber"]').isVisible()) {
-    await cardFrame.locator('input[name="cardnumber"]').fill(STRIPE_TEST_CARD.number);
-  } else {
-    // Newer Stripe Checkout has direct inputs
-    const cardInput = page.locator('[data-testid="card-number-input"], input[name="cardNumber"]');
-    if (await cardInput.isVisible()) {
-      await cardInput.fill(STRIPE_TEST_CARD.number);
-    }
+  // Card number iframe
+  const cardFrame = page
+    .frameLocator('iframe[title*="card number"]')
+    .first();
+  if (await page.locator('iframe[title*="card number"]').isVisible()) {
+    await cardFrame
+      .locator('input[name="cardnumber"]')
+      .fill(STRIPE_TEST_CARD.number);
   }
 
-  // Fill expiry
-  const expiryFrame = page.frameLocator('iframe[name*="cardExpiry"]').first();
-  if (await page.locator('iframe[name*="cardExpiry"]').isVisible()) {
-    await expiryFrame.locator('input[name="exp-date"]').fill(STRIPE_TEST_CARD.expiry);
+  // Expiry iframe
+  const expiryFrame = page
+    .frameLocator('iframe[title*="expiration"]')
+    .first();
+  if (await page.locator('iframe[title*="expiration"]').isVisible()) {
+    await expiryFrame
+      .locator('input[name="exp-date"]')
+      .fill(STRIPE_TEST_CARD.expiry);
   }
 
-  // Fill CVC
-  const cvcFrame = page.frameLocator('iframe[name*="cardCvc"]').first();
-  if (await page.locator('iframe[name*="cardCvc"]').isVisible()) {
+  // CVC iframe
+  const cvcFrame = page.frameLocator('iframe[title*="CVC"]').first();
+  if (await page.locator('iframe[title*="CVC"]').isVisible()) {
     await cvcFrame.locator('input[name="cvc"]').fill(STRIPE_TEST_CARD.cvc);
   }
 
-  // Fill cardholder name if visible
-  const nameInput = page.locator('input[name="cardholderName"]');
+  // Cardholder name
+  const nameInput = page.locator("#billingName");
   if (await nameInput.isVisible()) {
     await nameInput.fill(`${TEST_USER.firstName} ${TEST_USER.lastName}`);
   }
 
-  // Fill ZIP if visible
-  const zipInput = page.locator('input[name="postalCode"]');
+  // ZIP
+  const zipInput = page.locator("#billingPostalCode");
   if (await zipInput.isVisible()) {
     await zipInput.fill(STRIPE_TEST_CARD.zip);
   }
 
-  // Submit
-  const submitButton = page.getByRole("button", { name: /subscribe|pay|submit/i });
-  await submitButton.click();
+  // Subscribe
+  await page.getByRole("button", { name: /subscribe/i }).first().click();
 
-  // Wait for redirect back to our site
-  await page.waitForURL(/catalyst/, { timeout: 30000 });
+  // Wait for redirect back
+  await page.waitForURL(/dashboard\/billing/, { timeout: 30000 });
 }
