@@ -4,12 +4,20 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+const http = require('http');
+
 const PLUGIN_DIR = path.join(__dirname, '..', 'plugin');
+const CREDENTIALS_DIR = path.join(require('os').homedir(), '.catalyst');
+const CREDENTIALS_FILE = path.join(CREDENTIALS_DIR, 'credentials.json');
+const APP_URL = process.env.CATALYST_APP_URL || 'https://catalyst.crashbytes.com';
 
 const COMMANDS = {
   init: 'Install Catalyst plugin into the current project',
   remove: 'Remove Catalyst plugin from the current project',
   status: 'Check if Catalyst is installed in the current project',
+  login: 'Log in to Catalyst Cloud',
+  logout: 'Log out of Catalyst Cloud',
+  whoami: 'Show current logged-in user',
   help: 'Show this help message',
 };
 
@@ -31,12 +39,14 @@ function printHelp() {
   }
   console.log(`
 After installing, use these commands in Claude Code:
-  /catalyst          Full analysis + generate all configs
-  /catalyst:analyze  Analyze only (no file generation)
-  /catalyst:skills   Generate skills only
-  /catalyst:agents   Generate agents only
-  /catalyst:claudemd Generate CLAUDE.md only
-  /catalyst:settings Generate settings.local.json only
+  /catalyst              Full analysis + generate all configs
+  /catalyst analyze      Analyze only (no file generation)
+  /catalyst skills       Generate skills only
+  /catalyst agents       Generate agents only
+  /catalyst mcp          Generate MCP server configs only
+  /catalyst guardrails   Generate guardrails only
+  /catalyst claudemd     Generate CLAUDE.md only
+  /catalyst settings     Generate settings.local.json only
   `);
 }
 
@@ -171,6 +181,123 @@ function status() {
   }
 }
 
+// --- Auth commands ---
+
+function getCredentials() {
+  if (!fs.existsSync(CREDENTIALS_FILE)) return null;
+  try {
+    return JSON.parse(fs.readFileSync(CREDENTIALS_FILE, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function saveCredentials(creds) {
+  if (!fs.existsSync(CREDENTIALS_DIR)) {
+    fs.mkdirSync(CREDENTIALS_DIR, { recursive: true });
+  }
+  fs.writeFileSync(CREDENTIALS_FILE, JSON.stringify(creds, null, 2), { mode: 0o600 });
+}
+
+function deleteCredentials() {
+  if (fs.existsSync(CREDENTIALS_FILE)) {
+    fs.unlinkSync(CREDENTIALS_FILE);
+  }
+}
+
+async function login() {
+  printBanner();
+  console.log('Logging in to Catalyst Cloud...\n');
+
+  const loginUrl = `${APP_URL}/dashboard/settings?cli=true`;
+  console.log('Opening your browser to complete authentication...');
+  console.log(`If it doesn't open automatically, visit:\n  ${loginUrl}\n`);
+
+  // Open browser
+  const opener = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'start' : 'xdg-open';
+  try {
+    execSync(`${opener} "${loginUrl}"`, { stdio: 'ignore' });
+  } catch {
+    // Browser open failed, user can manually visit URL
+  }
+
+  // Start a local server to receive the token callback
+  return new Promise((resolve) => {
+    const server = http.createServer((req, res) => {
+      const url = new URL(req.url, 'http://localhost');
+      if (url.pathname === '/callback' && url.searchParams.get('token')) {
+        const token = url.searchParams.get('token');
+        saveCredentials({ token, app_url: APP_URL });
+
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end('<html><body><h2>Catalyst CLI authenticated!</h2><p>You can close this tab and return to your terminal.</p></body></html>');
+
+        console.log('Authentication successful!');
+        console.log('Run `catalyst whoami` to verify.\n');
+
+        server.close();
+        resolve();
+      } else {
+        res.writeHead(404);
+        res.end();
+      }
+    });
+
+    server.listen(9876, () => {
+      console.log('Waiting for authentication...');
+      console.log('(Press Ctrl+C to cancel)\n');
+    });
+
+    // Timeout after 5 minutes
+    setTimeout(() => {
+      console.log('\nAuthentication timed out. Please try again.');
+      server.close();
+      resolve();
+    }, 5 * 60 * 1000);
+  });
+}
+
+function logout() {
+  printBanner();
+  const creds = getCredentials();
+  if (creds) {
+    deleteCredentials();
+    console.log('Logged out of Catalyst Cloud.');
+  } else {
+    console.log('Not currently logged in.');
+  }
+}
+
+async function whoami() {
+  printBanner();
+  const creds = getCredentials();
+  if (!creds || !creds.token) {
+    console.log('Not logged in. Run `catalyst login` to authenticate.');
+    return;
+  }
+
+  console.log('Checking authentication...\n');
+
+  try {
+    const url = `${creds.app_url || APP_URL}/api/auth/cli-token`;
+    const res = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${creds.token}` },
+    });
+
+    if (!res.ok) {
+      console.log('Authentication invalid or expired. Run `catalyst login` to re-authenticate.');
+      return;
+    }
+
+    const data = await res.json();
+    console.log(`Logged in as: ${data.user.email}`);
+    console.log(`Plan: ${data.user.plan}`);
+    if (data.user.name) console.log(`Name: ${data.user.name}`);
+  } catch (err) {
+    console.error('Failed to connect to Catalyst Cloud. Check your connection.');
+  }
+}
+
 // Main
 const command = process.argv[2] || 'help';
 
@@ -184,6 +311,15 @@ switch (command) {
     break;
   case 'status':
     status();
+    break;
+  case 'login':
+    login();
+    break;
+  case 'logout':
+    logout();
+    break;
+  case 'whoami':
+    whoami();
     break;
   case 'help':
   case '--help':

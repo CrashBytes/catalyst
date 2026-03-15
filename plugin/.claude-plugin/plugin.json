@@ -1,7 +1,7 @@
 {
   "name": "catalyst",
-  "description": "Catalyst by CrashBytes - Codebase analyzer and Claude Code configuration generator. Analyzes any codebase and generates optimized skills, agents, CLAUDE.md, and settings.",
-  "version": "1.0.0",
+  "description": "Catalyst by CrashBytes - Codebase analyzer and Claude Code configuration generator. Analyzes any codebase and generates optimized skills, agents, MCP servers, guardrails, CLAUDE.md, and settings.",
+  "version": "2.0.0",
   "author": {
     "name": "CrashBytes",
     "url": "https://crashbytes.com"

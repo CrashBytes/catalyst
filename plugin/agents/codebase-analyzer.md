@@ -1,6 +1,6 @@
 ---
 name: codebase-analyzer
-description: "Deep codebase analysis agent for Catalyst. Analyzes directory structure, tech stack, code patterns, and conventions. Invoke when performing codebase analysis for configuration generation."
+description: "Deep codebase analysis agent for Catalyst. Analyzes directory structure, tech stack, code patterns, conventions, MCP integration opportunities, and guardrail requirements. Invoke when performing codebase analysis for configuration generation."
 tools: Glob, Grep, Read, Bash
 model: sonnet
 ---
@@ -16,6 +16,8 @@ Perform deep analysis of a codebase to identify:
 5. Testing patterns
 6. Deployment configuration
 7. Critical files and rules
+8. External service integrations (for MCP server recommendations)
+9. Security boundaries and safety requirements (for guardrail generation)
 
 ## Analysis Process
 
@@ -59,7 +61,28 @@ Identify:
 - Code style (from linter configs)
 - Commit message conventions (from git log)
 
-### Step 6: Git Context
+### Step 6: Integration & Service Detection
+Scan for external service usage that indicates MCP server needs:
+- Database connections (PostgreSQL, MySQL, SQLite, MongoDB, Redis)
+- Cloud provider SDKs (AWS, GCP, Azure, Cloudflare)
+- GitHub/GitLab integration (workflows, API calls, webhooks)
+- Browser automation (Puppeteer, Playwright, Selenium, Cypress)
+- Communication services (Slack, email, notification SDKs)
+- Monitoring services (Sentry, Datadog, New Relic)
+- External API calls (HTTP clients, REST SDKs, webhook handlers)
+- Search services (Elasticsearch, Algolia, Brave Search)
+
+### Step 7: Security & Safety Analysis
+Identify existing safety mechanisms and gaps:
+- Secret management (.env patterns, vault references, encrypted configs)
+- Git hooks (husky, lint-staged, pre-commit)
+- Protected/critical files (lock files, generated code, infra configs)
+- Destructive command patterns in scripts
+- Sensitive data handling (PII, payment data, auth tokens)
+- Compliance indicators (license headers, policy files)
+- CI/CD pipeline protections (required reviews, branch protection)
+
+### Step 8: Git Context
 Run git commands to understand:
 - Branch naming conventions
 - Commit message style
@@ -121,6 +144,39 @@ COMMANDS:
 CRITICAL_FILES:
   - path: {file}
     reason: {why it's critical}
+
+INTEGRATIONS:
+  databases:
+    - type: {PostgreSQL|MySQL|SQLite|MongoDB|Redis}
+      client: {ORM or driver}
+      connection_ref: {env var or config path}
+  cloud_services:
+    - provider: {AWS|GCP|Azure|Cloudflare}
+      services: [{list of detected services}]
+      sdk: {SDK package name}
+  external_apis:
+    - service: {service name}
+      package: {SDK or HTTP client}
+      purpose: {what it's used for}
+  browser_automation: {Puppeteer|Playwright|Cypress|none}
+  communication: [{Slack|email|notifications}]
+  monitoring: [{Sentry|Datadog|New Relic|none}]
+
+SECURITY:
+  secret_management:
+    env_files: [{list of .env files}]
+    vault: {HashiCorp Vault|AWS Secrets Manager|none}
+    patterns: [{how secrets are referenced}]
+  existing_hooks:
+    pre_commit: {husky|lint-staged|pre-commit|none}
+    hooks_list: [{list of existing hooks}]
+  protected_files:
+    - path: {file or pattern}
+      reason: {why it's protected}
+  sensitive_patterns:
+    - pattern: {what to watch for}
+      location: {where it appears}
+  compliance: [{HIPAA|SOC2|PCI|GDPR|none}]
 
 GIT:
   branch_convention: {pattern}

@@ -1,13 +1,17 @@
 {
   "name": "@crashbytes/catalyst",
-  "version": "1.0.0",
-  "description": "Catalyst by CrashBytes - Analyze any codebase and generate optimized Claude Code configurations (skills, agents, CLAUDE.md, settings)",
-  "main": "src/index.js",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Catalyst by CrashBytes - Analyze any codebase and generate optimized Claude Code configurations",
+  "workspaces": ["app"],
   "bin": {
     "catalyst": "./bin/catalyst.js"
   },
   "scripts": {
-    "test": "node --test src/**/*.test.js"
+    "test": "node --test src/**/*.test.js",
+    "dev": "npm run dev --workspace=app",
+    "build": "npm run build --workspace=app",
+    "deploy": "npm run deploy --workspace=app"
   },
   "keywords": [
     "claude-code",
@@ -15,6 +19,9 @@
     "codebase-analyzer",
     "skills",
     "agents",
+    "mcp",
+    "guardrails",
+    "model-context-protocol",
     "developer-tools",
     "crashbytes"
   ],

@@ -1,8 +1,8 @@
 ---
 name: catalyst
-description: "Catalyst by CrashBytes - Analyze any codebase and generate optimized Claude Code configurations. Use when user says 'catalyst', 'analyze codebase', 'generate skills', 'generate agents', 'setup claude', 'optimize claude config', 'forge config', or 'bootstrap claude'. Performs deep codebase analysis and generates CLAUDE.md, skills, agents, and settings."
+description: "Catalyst by CrashBytes - Analyze any codebase and generate optimized Claude Code configurations. Use when user says 'catalyst', 'analyze codebase', 'generate skills', 'generate agents', 'generate mcp', 'generate guardrails', 'setup claude', 'optimize claude config', 'forge config', or 'bootstrap claude'. Performs deep codebase analysis and generates CLAUDE.md, skills, agents, MCP configs, guardrails, and settings."
 user-invocable: true
-argument-hint: "[analyze|skills|agents|claudemd|settings]"
+argument-hint: "[analyze|skills|agents|mcp|guardrails|claudemd|settings|all]"
 allowed-tools: Read, Glob, Grep, Bash, Write, Edit, Agent, AskUserQuestion
 ---
 
@@ -17,6 +17,8 @@ Parse `$ARGUMENTS` to determine the mode:
 - **"analyze"**: Analysis only — produce a report, generate nothing
 - **"skills"**: Generate skills only
 - **"agents"**: Generate agents only
+- **"mcp"**: Generate MCP server configurations only
+- **"guardrails"**: Generate guardrails only
 - **"claudemd"**: Generate/update CLAUDE.md only
 - **"settings"**: Generate settings.local.json only
 
@@ -111,29 +113,59 @@ Use Grep to detect patterns:
 - **Validation**: Schema validation (Zod, Joi, Yup), input validation
 - **Content patterns**: MDX, Markdown, CMS integration, content schemas
 - **Deployment patterns**: Dockerfiles, deploy scripts, CI/CD workflows
+- **External service integrations**: APIs, webhooks, third-party SDKs, cloud services
+- **Security patterns**: Secret management, input sanitization, CORS config, rate limiting, CSP headers
 
-### 1.5 Existing Claude Config Detection
+### 1.5 MCP & Integration Detection
+Scan for patterns that indicate MCP server recommendations:
+
+- **Database connections**: Connection strings, ORM configs, database clients → database MCP servers
+- **GitHub/Git integration**: `.github/` workflows, PR templates, issue templates → GitHub MCP
+- **Cloud providers**: AWS SDK, GCP client libs, Azure SDK, Cloudflare Workers → cloud-specific MCPs
+- **Search/web**: Web scraping, API calls to external services, search functionality → fetch/search MCPs
+- **File management**: Heavy file I/O, asset processing, document generation → filesystem MCP
+- **Monitoring/observability**: Logging services, APM, error tracking → monitoring MCPs
+- **Communication**: Slack SDK, email libs, notification services → messaging MCPs
+- **Browser automation**: Puppeteer, Playwright, Selenium → browser MCP
+- **Package registries**: npm, PyPI, crates.io publishing → registry MCPs
+
+### 1.6 Guardrail Detection
+Analyze existing safety mechanisms and identify gaps:
+
+- **Existing hooks**: `.husky/`, `.git/hooks/`, `pre-commit-config.yaml`, lint-staged config
+- **Secret management**: `.env` files, vault references, secret scanning (`.gitleaksignore`, `.secretscanignore`)
+- **Protected files**: Lock files, generated code, critical configs that shouldn't be modified
+- **Destructive commands**: Scripts that drop databases, delete resources, force-push
+- **Sensitive directories**: Credentials, keys, certificates, production configs
+- **Code quality gates**: Required test coverage, type checking, linting thresholds
+- **Permission boundaries**: Directories or files with restricted access patterns
+- **Compliance indicators**: License headers, HIPAA/SOC2/PCI markers, data handling policies
+
+### 1.7 Existing Claude Config Detection
 Check for existing Claude Code configuration:
 
 ```
 .claude/                    # Claude directory
 CLAUDE.md                   # Existing instructions
 .claude/settings.local.json # Existing settings
+.claude/settings.json       # Shared settings
 .claude/skills/**           # Existing skills
 .claude/agents/**           # Existing agents
 .claude/commands/**         # Existing commands
+.claude/hooks/**            # Existing hooks
+.claude/mcp.json            # Existing MCP configs
 ```
 
 If configs exist, note them — we'll merge, not overwrite.
 
-### 1.6 Git Analysis
+### 1.8 Git Analysis
 Run git commands to understand:
 - Branch naming convention (git branch -a | head -20)
 - Recent commit message style (git log --oneline -20)
 - Contributors (git shortlog -sn --no-merges | head -10)
 - Active areas of development (git log --stat --since="2 weeks ago" --oneline | head -40)
 
-### 1.7 Build & Dev Workflow
+### 1.9 Build & Dev Workflow
 Identify:
 - Dev server command and port
 - Build command and output directory
@@ -168,6 +200,8 @@ Present findings to the user in a clear, structured format:
 - [ ] CLAUDE.md - {brief description of what it will contain}
 - [ ] {N} Skills - {list of skill names}
 - [ ] {N} Agents - {list of agent names}
+- [ ] {N} MCP Servers - {list of recommended MCP servers with rationale}
+- [ ] Guardrails - {list of guardrail types: hooks, file protections, command restrictions}
 - [ ] settings.local.json - {key permissions}
 ```
 
@@ -401,7 +435,240 @@ Only report findings with >= 80% confidence. Avoid false positives.
 4. **Define clear output format** — agents should return structured, actionable findings
 5. **Include confidence scoring** — prevent noise from low-confidence findings
 
-## Phase 6: Generate Settings
+## Phase 6: Generate MCP Server Configurations
+
+Generate `.claude/mcp.json` with recommended MCP (Model Context Protocol) server configurations based on detected integrations. If one exists, READ it first and MERGE your additions.
+
+### MCP Selection Logic
+
+Generate MCP server recommendations based on what the codebase actually uses:
+
+**If PostgreSQL/MySQL/SQLite detected** → Recommend `database` MCP server
+  - Configure connection to detected database type
+  - Read-only by default for safety, writable only if explicitly needed
+
+**If GitHub workflows/PR templates detected** → Recommend `github` MCP server
+  - Enables PR management, issue tracking, code review from Claude
+  - Scope to the detected repository
+
+**If AWS SDK/services detected** → Recommend `aws` MCP server
+  - Configure for detected AWS services (S3, DynamoDB, Lambda, etc.)
+  - Read-only permissions by default
+
+**If Cloudflare Workers/Pages/KV detected** → Recommend `cloudflare` MCP server
+  - Enables Workers deployment, KV management, D1 database access
+
+**If Puppeteer/Playwright/Selenium detected** → Recommend `browser` MCP server
+  - Enables web scraping, testing, and browser automation from Claude
+
+**If Slack SDK/webhooks detected** → Recommend `slack` MCP server
+  - Enables reading channels, posting messages (with user confirmation)
+
+**If Docker/container orchestration detected** → Recommend `docker` MCP server
+  - Container management, image building, log access
+
+**If filesystem-heavy operations detected** → Recommend `filesystem` MCP server
+  - Scoped to specific directories, not root
+  - Read-only for sensitive directories
+
+**If external API integrations detected** → Recommend `fetch` MCP server
+  - Enables HTTP requests to detected API endpoints
+  - Whitelist specific domains only
+
+**If Sentry/Datadog/monitoring detected** → Recommend `monitoring` MCP server
+  - Access to error logs, performance metrics, alerts
+
+**If Redis/cache layer detected** → Recommend `redis` MCP server
+  - Cache inspection, key management
+  - Read-only by default
+
+### MCP Configuration Template
+
+```json
+{
+  "mcpServers": {
+    "{server-name}": {
+      "type": "stdio",
+      "command": "{command}",
+      "args": ["{args}"],
+      "env": {
+        "{ENV_VAR}": "{value_or_reference}"
+      }
+    }
+  }
+}
+```
+
+### MCP Generation Rules:
+1. **Only recommend MCP servers the project will actually use** — no speculative recommendations
+2. **Default to read-only** — write access requires explicit justification
+3. **Scope narrowly** — database MCPs connect to dev databases only, filesystem MCPs scope to project directories
+4. **Never embed secrets** — use environment variable references, not actual credentials
+5. **Include setup instructions** — each MCP server recommendation should include install/setup steps as comments
+6. **Merge with existing** — if `.claude/mcp.json` exists, merge configurations (don't overwrite)
+7. **Validate availability** — recommend well-known, actively maintained MCP servers
+
+### Common MCP Server Registry:
+
+| Detection | MCP Server | Package/Command | Purpose |
+|-----------|-----------|-----------------|---------|
+| PostgreSQL | `postgres` | `@modelcontextprotocol/server-postgres` | Query, inspect schema |
+| SQLite | `sqlite` | `@modelcontextprotocol/server-sqlite` | Query, inspect schema |
+| GitHub | `github` | `@modelcontextprotocol/server-github` | PRs, issues, repos |
+| Filesystem | `filesystem` | `@modelcontextprotocol/server-filesystem` | Scoped file access |
+| Puppeteer | `puppeteer` | `@modelcontextprotocol/server-puppeteer` | Browser automation |
+| Brave Search | `brave-search` | `@modelcontextprotocol/server-brave-search` | Web search |
+| Fetch | `fetch` | `@anthropic-ai/mcp-fetch` | HTTP requests |
+| Memory | `memory` | `@modelcontextprotocol/server-memory` | Persistent knowledge |
+| Slack | `slack` | `@modelcontextprotocol/server-slack` | Team communication |
+| Google Drive | `gdrive` | `@modelcontextprotocol/server-gdrive` | Document access |
+| Sentry | `sentry` | `@modelcontextprotocol/server-sentry` | Error tracking |
+
+## Phase 7: Generate Guardrails
+
+Generate guardrail configurations that protect the project from unintended destructive actions, enforce code quality, and maintain security boundaries. Guardrails are output as Claude Code hooks in `.claude/settings.local.json` and as protective rules in CLAUDE.md.
+
+### Guardrail Categories
+
+#### 7.1 File Protection Guardrails
+Identify files that should never be modified without explicit confirmation:
+
+- **Lock files**: `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `Gemfile.lock`, `Cargo.lock`, `poetry.lock`, `go.sum`
+- **Generated files**: Files with `// @generated`, auto-generated types, compiled outputs
+- **Critical configs**: Production deployment configs, CI/CD pipeline definitions, security policies
+- **Infrastructure files**: Terraform state, CloudFormation templates, Kubernetes manifests
+- **Schema files**: Database schemas, API schemas, protobuf definitions (if policy requires review)
+
+Generate deny rules in settings:
+```json
+{
+  "permissions": {
+    "deny": [
+      "Edit(file_path:**/terraform.tfstate*)",
+      "Edit(file_path:**/.env.production)",
+      "Edit(file_path:**/docker-compose.prod.*)",
+      "Write(file_path:**/*.lock)"
+    ]
+  }
+}
+```
+
+#### 7.2 Command Restriction Guardrails
+Prevent destructive commands from being auto-executed:
+
+**Always deny (universal)**:
+- `Bash(rm -rf /*)` — catastrophic deletion
+- `Bash(git push --force*)` to main/master — destructive force push
+- `Bash(git reset --hard*)` — discards uncommitted work
+- `Bash(drop database*)` — database destruction
+- `Bash(DROP TABLE*)` — table destruction
+- `Bash(*--no-verify*)` — bypasses safety hooks
+
+**Project-specific denials** (detect and add):
+- If production database detected → deny direct production DB commands
+- If cloud infrastructure detected → deny resource deletion commands
+- If CI/CD detected → deny pipeline modification commands without review
+
+```json
+{
+  "permissions": {
+    "deny": [
+      "Bash(rm -rf /*)",
+      "Bash(git push --force*)",
+      "Bash(git reset --hard*)",
+      "Bash(*DROP DATABASE*)",
+      "Bash(*DROP TABLE*)",
+      "Bash(*--no-verify*)",
+      "Bash(*--force-with-lease*:*main*)",
+      "Bash(*--force-with-lease*:*master*)"
+    ]
+  }
+}
+```
+
+#### 7.3 Hook-Based Guardrails
+Generate Claude Code hooks that run validation before/after actions. Hooks go in `.claude/settings.local.json` under the `hooks` key.
+
+**Pre-edit hooks** (validate before file changes):
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hook": "{validation_command}",
+        "description": "{what this hook checks}"
+      }
+    ]
+  }
+}
+```
+
+**Post-edit hooks** (validate after file changes):
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hook": "{validation_command}",
+        "description": "{what this hook checks}"
+      }
+    ]
+  }
+}
+```
+
+Select hooks based on detected patterns:
+
+**If linter detected** → Post-edit hook to run linter on changed files
+**If type checker detected** → Post-edit hook to run type checks
+**If test runner detected** → Post-edit hook suggestion (optional — can be slow)
+**If secret patterns in codebase** → Pre-edit hook to scan for accidental secret insertion
+**If `.env` files exist** → Pre-edit hook to prevent `.env` modification (require manual edits)
+**If formatting enforced** → Post-edit hook to run formatter on changed files
+
+#### 7.4 CLAUDE.md Safety Rules
+Add a `## Guardrails` section to CLAUDE.md with project-specific safety rules:
+
+```markdown
+## Guardrails
+
+### Protected Files — DO NOT modify without explicit user approval
+- `{file}` — {reason}
+- `{file}` — {reason}
+
+### Forbidden Actions
+- NEVER run `{command}` — {reason}
+- NEVER modify `{pattern}` — {reason}
+
+### Required Validations
+- Always run `{lint_command}` before committing
+- Always run `{test_command}` after modifying `{critical_path}`
+- Always verify `{check}` before `{action}`
+
+### Security Boundaries
+- NEVER commit files matching: {patterns}
+- NEVER output or log: {sensitive_data_patterns}
+- ALWAYS sanitize: {input_patterns}
+```
+
+#### 7.5 Dependency Guardrails
+If package management detected, add rules to prevent:
+- Installing packages without user confirmation (suggest but don't auto-install)
+- Upgrading major versions without review
+- Adding packages with known vulnerabilities
+
+### Guardrail Generation Rules:
+1. **Don't over-restrict** — guardrails should prevent mistakes, not slow down normal work
+2. **Explain each guardrail** — include the reason so users understand and can customize
+3. **Layer defenses** — use deny rules, hooks, AND CLAUDE.md rules for critical protections
+4. **Default to safe** — when in doubt, restrict and let the user relax permissions
+5. **Project-specific** — tailor guardrails to actual risks detected in the codebase
+6. **Never block read operations** — only restrict write/execute operations
+7. **Merge with existing** — if hooks or deny rules exist, merge (don't overwrite)
+
+## Phase 8: Generate Settings
 
 Generate `.claude/settings.local.json` with appropriate permissions.
 
@@ -474,7 +741,7 @@ Based on detected tech stack, add documentation domains:
 - Go → `WebFetch(domain:pkg.go.dev)`
 - And so on for other detected technologies
 
-## Phase 7: Summary & Next Steps
+## Phase 9: Summary & Next Steps
 
 After generation, present a summary:
 
@@ -485,13 +752,17 @@ After generation, present a summary:
 - CLAUDE.md ({N} lines)
 - {N} Skills: {list with brief descriptions}
 - {N} Agents: {list with brief descriptions}
-- settings.local.json ({N} permissions)
+- {N} MCP Servers: {list with brief descriptions and setup status}
+- Guardrails: {N} deny rules, {N} hooks, {N} protected file rules
+- settings.local.json ({N} permissions, {N} deny rules, {N} hooks)
 
 ### Next Steps:
 1. Review generated files — customize to your preferences
 2. Add any project-specific rules to CLAUDE.md
-3. Test skills by invoking them: /{skill-name}
-4. Commit the .claude/ directory to your repo
+3. Install recommended MCP servers: {install commands}
+4. Test skills by invoking them: /{skill-name}
+5. Review guardrails — relax any that are too restrictive for your workflow
+6. Commit the .claude/ directory to your repo
 ```
 
 ## Important Guidelines

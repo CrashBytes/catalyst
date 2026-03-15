@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-guard-950 text-guard-100 antialiased font-sans;
+  }
+
+  ::selection {
+    @apply bg-catalyst-600/40 text-white;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-guard-900/60 backdrop-blur-xl border border-guard-700/50;
+  }
+
+  .glass-light {
+    @apply bg-guard-800/40 backdrop-blur-lg border border-guard-700/30;
+  }
+
+  .rail-left {
+    @apply border-l-2 border-catalyst-600/60 pl-4;
+  }
+
+  .rail-accent {
+    @apply border-l-2 border-knowledge-500/60 pl-4;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-catalyst-400 to-knowledge-400 bg-clip-text text-transparent;
+  }
+
+  .shield-glow {
+    @apply shadow-glow ring-1 ring-catalyst-600/20;
+  }
+}
