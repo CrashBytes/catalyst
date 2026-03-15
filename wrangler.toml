@@ -1,0 +1,9 @@
+name = "catalyst"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "./app/build/client"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "catalyst-db"
+database_id = "1a379bd9-d313-48fc-bd76-59cf69d97015"
