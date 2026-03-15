@@ -18,17 +18,39 @@ export const links = () => [{ rel: "stylesheet", href: stylesheet }];
 
 export const loader = async (args: LoaderFunctionArgs) => {
   try {
-    const env = (args.context.cloudflare as any).env as Env;
+    // Debug: log context structure to find where env vars live
+    const ctx = args.context as any;
+    const cloudflare = ctx.cloudflare || ctx;
+    const env = cloudflare.env || ctx.env || {};
+
+    const debugInfo = {
+      hasContext: !!ctx,
+      contextKeys: Object.keys(ctx || {}),
+      hasCloudflare: !!ctx.cloudflare,
+      cloudflareKeys: ctx.cloudflare ? Object.keys(ctx.cloudflare) : [],
+      hasEnv: !!env,
+      envKeys: Object.keys(env || {}),
+      hasPK: !!env.CLERK_PUBLISHABLE_KEY,
+      hasSK: !!env.CLERK_SECRET_KEY,
+    };
+    console.log("ROOT LOADER DEBUG:", JSON.stringify(debugInfo));
+
     return rootAuthLoader(args, ({ request }) => {
       return {
         ENV: {
-          CLERK_PUBLISHABLE_KEY: env.CLERK_PUBLISHABLE_KEY,
+          CLERK_PUBLISHABLE_KEY: env.CLERK_PUBLISHABLE_KEY || "",
         },
       };
     });
-  } catch (error) {
-    console.error("Root loader error:", error);
-    throw error;
+  } catch (error: any) {
+    console.error("Root loader error:", error?.message || error);
+    throw new Response(
+      JSON.stringify({
+        error: error?.message || String(error),
+        stack: error?.stack,
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
 };
 
@@ -47,10 +69,10 @@ export function ErrorBoundary() {
           <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
           <pre className="text-left bg-gray-900 p-4 rounded text-red-400 text-sm overflow-auto max-w-2xl">
             {isRouteErrorResponse(error)
-              ? `${error.status}: ${error.data}`
+              ? `${error.status}: ${typeof error.data === 'string' ? error.data : JSON.stringify(error.data, null, 2)}`
               : error instanceof Error
                 ? error.message + "\n\n" + error.stack
-                : "Unknown error"}
+                : JSON.stringify(error, null, 2) || "Unknown error"}
           </pre>
         </div>
         <Scripts />
