@@ -16,22 +16,35 @@ export async function loader(args: LoaderFunctionArgs) {
   let user = await getUserById(db, userId);
 
   if (!user) {
+    // Clerk session claims structure varies - try multiple paths
+    const claims = sessionClaims as Record<string, any> || {};
     const email =
-      (sessionClaims?.email as string) ||
-      (sessionClaims?.primaryEmail as string) ||
-      "";
+      claims.email ||
+      claims.primaryEmail ||
+      claims.email_address ||
+      claims.primary_email_address ||
+      (claims.emails && claims.emails[0]) ||
+      `${userId}@catalyst.local`;
     const name =
-      (sessionClaims?.name as string) ||
-      (sessionClaims?.fullName as string) ||
-      null;
-    const avatarUrl = (sessionClaims?.imageUrl as string) || null;
+      claims.name ||
+      claims.fullName ||
+      claims.full_name ||
+      (claims.firstName || claims.first_name
+        ? `${claims.firstName || claims.first_name} ${claims.lastName || claims.last_name || ""}`.trim()
+        : null);
+    const avatarUrl =
+      claims.imageUrl || claims.image_url || claims.avatar_url || null;
 
-    await createUser(db, {
-      id: userId,
-      email,
-      name: name || undefined,
-      avatar_url: avatarUrl || undefined,
-    });
+    try {
+      await createUser(db, {
+        id: userId,
+        email: String(email),
+        name: name ? String(name) : undefined,
+        avatar_url: avatarUrl ? String(avatarUrl) : undefined,
+      });
+    } catch (e) {
+      console.error("Failed to create user:", e);
+    }
 
     user = await getUserById(db, userId);
   }
