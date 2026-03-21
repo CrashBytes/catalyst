@@ -40,10 +40,11 @@ export async function loader(args: LoaderFunctionArgs) {
     const tokenHash = await hashToken(rawToken);
     const id = crypto.randomUUID();
 
+    const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
     await execute(
       db,
-      "INSERT INTO cli_tokens (id, user_id, token_hash, name) VALUES (?, ?, ?, ?)",
-      [id, userId, tokenHash, "CLI (auto)"]
+      "INSERT INTO cli_tokens (id, user_id, token_hash, name, expires_at) VALUES (?, ?, ?, ?, ?)",
+      [id, userId, tokenHash, "CLI (auto)", expiresAt]
     );
 
     // Redirect to the CLI's local callback server with the token
@@ -74,10 +75,11 @@ export async function action(args: ActionFunctionArgs) {
     const tokenHash = await hashToken(rawToken);
     const id = crypto.randomUUID();
 
+    const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
     await execute(
       db,
-      "INSERT INTO cli_tokens (id, user_id, token_hash, name) VALUES (?, ?, ?, ?)",
-      [id, userId, tokenHash, name.trim()]
+      "INSERT INTO cli_tokens (id, user_id, token_hash, name, expires_at) VALUES (?, ?, ?, ?, ?)",
+      [id, userId, tokenHash, name.trim(), expiresAt]
     );
 
     return json({ newToken: rawToken, tokenName: name.trim() });

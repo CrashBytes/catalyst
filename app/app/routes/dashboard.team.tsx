@@ -12,10 +12,13 @@ import {
   getUserOrganizations,
   getOrganizationMembers,
   getMemberCount,
+  getMemberRole,
   createOrganization,
   addOrganizationMember,
   removeOrganizationMember,
 } from "~/services/organization.server";
+
+const ALLOWED_ROLES = ["member", "admin", "owner"];
 
 export const meta: MetaFunction = () => {
   return [
@@ -102,10 +105,27 @@ export async function action(args: ActionFunctionArgs) {
       return json({ error: "Email is required." }, { status: 400 });
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      return json({ error: "Invalid email format." }, { status: 400 });
+    }
+
+    // Validate role against whitelist
+    if (!ALLOWED_ROLES.includes(role)) {
+      return json({ error: "Invalid role." }, { status: 400 });
+    }
+
     const orgs = await getUserOrganizations(db, userId);
     const org = orgs[0];
     if (!org) {
       return json({ error: "No organization found." }, { status: 404 });
+    }
+
+    // Permission check: only owners and admins can invite members
+    const requestingUserRole = await getMemberRole(db, org.id, userId);
+    if (requestingUserRole !== "owner" && requestingUserRole !== "admin") {
+      return json({ error: "You do not have permission to invite members." }, { status: 403 });
     }
 
     // Check seat limit
@@ -146,6 +166,12 @@ export async function action(args: ActionFunctionArgs) {
       return json({ error: "No organization found." }, { status: 404 });
     }
 
+    // Permission check: only owners and admins can remove members
+    const requestingUserRole = await getMemberRole(db, org.id, userId);
+    if (requestingUserRole !== "owner" && requestingUserRole !== "admin") {
+      return json({ error: "You do not have permission to remove members." }, { status: 403 });
+    }
+
     // Prevent removing self if owner
     if (memberId === userId && org.owner_id === userId) {
       return json(
@@ -169,10 +195,21 @@ export async function action(args: ActionFunctionArgs) {
       );
     }
 
+    // Validate role against whitelist
+    if (!ALLOWED_ROLES.includes(newRole)) {
+      return json({ error: "Invalid role." }, { status: 400 });
+    }
+
     const orgs = await getUserOrganizations(db, userId);
     const org = orgs[0];
     if (!org) {
       return json({ error: "No organization found." }, { status: 404 });
+    }
+
+    // Permission check: only owners and admins can change roles
+    const requestingUserRole = await getMemberRole(db, org.id, userId);
+    if (requestingUserRole !== "owner" && requestingUserRole !== "admin") {
+      return json({ error: "You do not have permission to change roles." }, { status: 403 });
     }
 
     await addOrganizationMember(db, org.id, memberId, newRole);

@@ -4,6 +4,7 @@ import { getAuth } from "@clerk/remix/ssr.server";
 import { getDb } from "~/lib/db.server";
 import { validateCliToken } from "~/lib/auth.server";
 import { getUserById } from "~/services/user.server";
+import { getProjectById } from "~/services/project.server";
 import {
   createAnalysis,
   completeAnalysis,
@@ -90,6 +91,18 @@ export async function action(args: ActionFunctionArgs) {
       { error: "projectId and type are required" },
       { status: 400 }
     );
+  }
+
+  // Validate analysis type
+  const ALLOWED_TYPES = ["full", "claudemd", "skills", "agents", "mcp", "guardrails", "settings"];
+  if (!ALLOWED_TYPES.includes(type)) {
+    return json({ error: "Invalid analysis type." }, { status: 400 });
+  }
+
+  // Verify project ownership
+  const project = await getProjectById(db, projectId, userId);
+  if (!project) {
+    return json({ error: "Project not found or access denied." }, { status: 404 });
   }
 
   // Check plan limits

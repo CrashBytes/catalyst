@@ -109,3 +109,16 @@ export async function getMemberCount(
   );
   return result?.count || 0;
 }
+
+export async function getMemberRole(
+  db: D1Database,
+  orgId: string,
+  userId: string
+): Promise<string | null> {
+  const result = await queryOne<{ role: string }>(
+    db,
+    "SELECT role FROM organization_members WHERE organization_id = ? AND user_id = ?",
+    [orgId, userId]
+  );
+  return result?.role || null;
+}

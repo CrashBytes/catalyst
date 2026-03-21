@@ -45,6 +45,18 @@ export async function action(args: ActionFunctionArgs) {
       return json({ error: "Project name is required." }, { status: 400 });
     }
 
+    if (name.trim().length > 100) {
+      return json({ error: "Project name must be 100 characters or less." }, { status: 400 });
+    }
+
+    if (description && description.trim().length > 500) {
+      return json({ error: "Description must be 500 characters or less." }, { status: 400 });
+    }
+
+    if (repoUrl && repoUrl.trim().length > 0 && !repoUrl.trim().startsWith("https://")) {
+      return json({ error: "Repository URL must start with https://." }, { status: 400 });
+    }
+
     const id = crypto.randomUUID();
     await createProject(db, {
       id,
