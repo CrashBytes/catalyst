@@ -30,10 +30,12 @@ export async function loader(args: LoaderFunctionArgs) {
   }
 
   return json({
-    userId: user.id,
-    email: user.email,
-    name: user.name,
-    plan: user.plan,
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      plan: user.plan,
+    },
   });
 }
 

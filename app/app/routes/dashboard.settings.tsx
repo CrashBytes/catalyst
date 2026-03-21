@@ -23,6 +23,24 @@ export async function loader(args: LoaderFunctionArgs) {
   if (!userId) return redirect("/sign-in");
 
   const db = getDb(args.context);
+  const url = new URL(args.request.url);
+
+  // CLI login flow: auto-create token and redirect back to CLI local server
+  if (url.searchParams.get("cli") === "true") {
+    const rawToken = generateToken();
+    const tokenHash = await hashToken(rawToken);
+    const id = crypto.randomUUID();
+
+    await execute(
+      db,
+      "INSERT INTO cli_tokens (id, user_id, token_hash, name) VALUES (?, ?, ?, ?)",
+      [id, userId, tokenHash, "CLI (auto)"]
+    );
+
+    // Redirect to the CLI's local callback server with the token
+    return redirect(`http://localhost:9876/callback?token=${rawToken}`);
+  }
+
   const tokens = await queryAll<CliToken>(
     db,
     "SELECT id, name, last_used_at, created_at FROM cli_tokens WHERE user_id = ? ORDER BY created_at DESC",
