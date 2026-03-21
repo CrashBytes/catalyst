@@ -3,7 +3,9 @@
   "version": "2.0.0",
   "private": true,
   "description": "Catalyst by CrashBytes - Analyze any codebase and generate optimized Claude Code configurations",
-  "workspaces": ["app"],
+  "workspaces": [
+    "app"
+  ],
   "bin": {
     "catalyst": "./bin/catalyst.js"
   },
@@ -36,5 +38,8 @@
     "plugin/",
     "README.md",
     "LICENSE"
-  ]
+  ],
+  "devDependencies": {
+    "dotenv": "^17.3.1"
+  }
 }
