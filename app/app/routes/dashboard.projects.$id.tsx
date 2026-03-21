@@ -9,6 +9,9 @@ import {
   Form,
   Link,
   useNavigate,
+  useNavigation,
+  useRouteError,
+  isRouteErrorResponse,
 } from "@remix-run/react";
 import { getAuth } from "@clerk/remix/ssr.server";
 import { getDb } from "~/lib/db.server";
@@ -85,6 +88,8 @@ export async function action(args: ActionFunctionArgs) {
 export default function ProjectDetailPage() {
   const { project, analyses } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === "submitting";
   const [isEditing, setIsEditing] = useState(false);
 
   return (
@@ -154,9 +159,10 @@ export default function ProjectDetailPage() {
             <div className="flex gap-3">
               <button
                 type="submit"
-                className="rounded-lg bg-catalyst-600 px-4 py-2 text-sm font-medium text-white hover:bg-catalyst-500"
+                disabled={isSubmitting}
+                className="rounded-lg bg-catalyst-600 px-4 py-2 text-sm font-medium text-white hover:bg-catalyst-500 disabled:opacity-50"
               >
-                Save Changes
+                {isSubmitting ? "Saving..." : "Save Changes"}
               </button>
               <button
                 type="button"
@@ -302,6 +308,25 @@ export default function ProjectDetailPage() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+  return (
+    <div className="rounded-xl border border-red-800/50 bg-red-900/20 p-6">
+      <h2 className="text-lg font-semibold text-red-400">Something went wrong</h2>
+      <p className="mt-2 text-sm text-guard-400">
+        {isRouteErrorResponse(error)
+          ? `${error.status}: ${error.data}`
+          : error instanceof Error
+            ? error.message
+            : "An unexpected error occurred."}
+      </p>
+      <a href="/dashboard" className="mt-4 inline-block text-sm text-catalyst-400 hover:text-catalyst-300">
+        Back to dashboard
+      </a>
     </div>
   );
 }

@@ -12,8 +12,17 @@ export const meta: MetaFunction = () => {
     {
       name: "description",
       content:
-        "Generate optimized CLAUDE.md files, skills, agents, MCP configs, and guardrails for your codebase.",
+        "AI-powered codebase analysis for Claude Code. Generate optimized CLAUDE.md files, skills, agents, MCP configs, and guardrails.",
     },
+    { property: "og:title", content: "Catalyst - AI-Powered Codebase Analysis for Claude Code" },
+    { property: "og:description", content: "AI-powered codebase analysis for Claude Code. Generate optimized CLAUDE.md files, skills, agents, MCP configs, and guardrails." },
+    { property: "og:url", content: "https://catalyst.crashbytes.com" },
+    { property: "og:site_name", content: "Catalyst by CrashBytes" },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:title", content: "Catalyst - AI-Powered Codebase Analysis for Claude Code" },
+    { name: "twitter:description", content: "AI-powered codebase analysis for Claude Code. Generate optimized CLAUDE.md files, skills, agents, MCP configs, and guardrails." },
+    { name: "theme-color", content: "#16a34a" },
   ];
 };
 

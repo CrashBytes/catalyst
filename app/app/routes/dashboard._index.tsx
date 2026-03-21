@@ -1,6 +1,6 @@
-import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
+import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
 import { json, redirect } from "@remix-run/cloudflare";
-import { useLoaderData, Link } from "@remix-run/react";
+import { useLoaderData, Link, useRouteError, isRouteErrorResponse } from "@remix-run/react";
 import { getAuth } from "@clerk/remix/ssr.server";
 import { getDb } from "~/lib/db.server";
 import { getProjectsByUserId } from "~/services/project.server";
@@ -10,6 +10,14 @@ import {
 } from "~/services/analysis.server";
 import { getUserById } from "~/services/user.server";
 import { PLANS } from "~/lib/plans";
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: "Overview - Catalyst" },
+    { name: "description", content: "Your Catalyst dashboard overview." },
+    { name: "theme-color", content: "#16a34a" },
+  ];
+};
 
 export async function loader(args: LoaderFunctionArgs) {
   const { userId } = await getAuth(args);
@@ -173,6 +181,25 @@ export default function DashboardIndex() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+  return (
+    <div className="rounded-xl border border-red-800/50 bg-red-900/20 p-6">
+      <h2 className="text-lg font-semibold text-red-400">Something went wrong</h2>
+      <p className="mt-2 text-sm text-guard-400">
+        {isRouteErrorResponse(error)
+          ? `${error.status}: ${error.data}`
+          : error instanceof Error
+            ? error.message
+            : "An unexpected error occurred."}
+      </p>
+      <a href="/dashboard" className="mt-4 inline-block text-sm text-catalyst-400 hover:text-catalyst-300">
+        Back to dashboard
+      </a>
     </div>
   );
 }

@@ -9,10 +9,28 @@ import {
 import { updateUserPlan } from "~/services/user.server";
 import type { PlanType } from "~/lib/plans";
 import Stripe from "stripe";
+import { checkRateLimit } from "~/lib/rate-limit.server";
 
 export async function action(args: ActionFunctionArgs) {
   if (args.request.method !== "POST") {
     return json({ error: "Method not allowed" }, { status: 405 });
+  }
+
+  // Rate limiting
+  const rateLimitDb = getDb(args.context);
+  const ip = args.request.headers.get("CF-Connecting-IP") || "unknown";
+  const rateLimit = await checkRateLimit(rateLimitDb, `api:stripe-webhook:${ip}`, 100, 1);
+  if (!rateLimit.allowed) {
+    return json(
+      { error: "Rate limit exceeded. Try again later." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": "60",
+          "X-RateLimit-Remaining": String(rateLimit.remaining),
+        },
+      }
+    );
   }
 
   const env = args.context.cloudflare.env as unknown as Env;

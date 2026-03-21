@@ -8,10 +8,27 @@ import { getDb } from "~/lib/db.server";
 import { queryAll, execute } from "~/lib/db.server";
 import { validateCliToken, generateToken, hashToken } from "~/lib/auth.server";
 import { getUserById } from "~/services/user.server";
+import { checkRateLimit } from "~/lib/rate-limit.server";
 
 export async function loader(args: LoaderFunctionArgs) {
   // GET: validate bearer token from Authorization header, return user info
   const db = getDb(args.context);
+
+  // Rate limiting
+  const ip = args.request.headers.get("CF-Connecting-IP") || "unknown";
+  const rateLimit = await checkRateLimit(db, `api:cli-token:${ip}`, 60, 1);
+  if (!rateLimit.allowed) {
+    return json(
+      { error: "Rate limit exceeded. Try again later." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": "60",
+          "X-RateLimit-Remaining": String(rateLimit.remaining),
+        },
+      }
+    );
+  }
 
   const authHeader = args.request.headers.get("Authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {

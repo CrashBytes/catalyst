@@ -6,8 +6,17 @@ export const meta: MetaFunction = () => {
     { title: "Pricing - Catalyst" },
     {
       name: "description",
-      content: "Simple, transparent pricing for Catalyst codebase analysis.",
+      content: "Simple, transparent pricing for Catalyst codebase analysis. Start free, upgrade when you need more power.",
     },
+    { property: "og:title", content: "Pricing - Catalyst" },
+    { property: "og:description", content: "Simple, transparent pricing for Catalyst codebase analysis. Start free, upgrade when you need more power." },
+    { property: "og:url", content: "https://catalyst.crashbytes.com/pricing" },
+    { property: "og:site_name", content: "Catalyst by CrashBytes" },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:title", content: "Pricing - Catalyst" },
+    { name: "twitter:description", content: "Simple, transparent pricing for Catalyst codebase analysis. Start free, upgrade when you need more power." },
+    { name: "theme-color", content: "#16a34a" },
   ];
 };
 

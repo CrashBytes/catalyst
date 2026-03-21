@@ -1,10 +1,18 @@
-import type { LoaderFunctionArgs } from "@remix-run/cloudflare";
+import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/cloudflare";
 import { json, redirect } from "@remix-run/cloudflare";
 import { Link, NavLink, Outlet, useLoaderData } from "@remix-run/react";
 import { getAuth } from "@clerk/remix/ssr.server";
 import { getDb } from "~/lib/db.server";
 import { getUserById, createUser } from "~/services/user.server";
 import { UserButton } from "@clerk/remix";
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: "Dashboard - Catalyst" },
+    { name: "description", content: "Manage your Catalyst codebase analysis projects." },
+    { name: "theme-color", content: "#16a34a" },
+  ];
+};
 
 export async function loader(args: LoaderFunctionArgs) {
   const { userId, sessionClaims } = await getAuth(args);

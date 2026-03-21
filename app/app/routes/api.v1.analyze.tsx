@@ -10,6 +10,7 @@ import {
   getAnalysisCountThisMonth,
 } from "~/services/analysis.server";
 import { canRunAnalysis } from "~/lib/plans";
+import { checkRateLimit } from "~/lib/rate-limit.server";
 
 export async function action(args: ActionFunctionArgs) {
   if (args.request.method !== "POST") {
@@ -17,6 +18,22 @@ export async function action(args: ActionFunctionArgs) {
   }
 
   const db = getDb(args.context);
+
+  // Rate limiting
+  const ip = args.request.headers.get("CF-Connecting-IP") || "unknown";
+  const rateLimit = await checkRateLimit(db, `api:analyze:${ip}`, 30, 1);
+  if (!rateLimit.allowed) {
+    return json(
+      { error: "Rate limit exceeded. Try again later." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": "60",
+          "X-RateLimit-Remaining": String(rateLimit.remaining),
+        },
+      }
+    );
+  }
 
   // Authenticate: try CLI token first, then Clerk
   let userId: string | null = null;

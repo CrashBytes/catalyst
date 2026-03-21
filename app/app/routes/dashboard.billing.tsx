@@ -1,9 +1,10 @@
 import type {
   LoaderFunctionArgs,
   ActionFunctionArgs,
+  MetaFunction,
 } from "@remix-run/cloudflare";
 import { json, redirect } from "@remix-run/cloudflare";
-import { useLoaderData, Form } from "@remix-run/react";
+import { useLoaderData, Form, useNavigation, useRouteError, isRouteErrorResponse } from "@remix-run/react";
 import { getAuth } from "@clerk/remix/ssr.server";
 import { getDb } from "~/lib/db.server";
 import { getUserById, updateUserStripeCustomerId } from "~/services/user.server";
@@ -15,6 +16,14 @@ import {
   createCustomerPortalSession,
   createStripeCustomer,
 } from "~/lib/stripe.server";
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: "Billing - Catalyst" },
+    { name: "description", content: "Manage your Catalyst subscription and billing." },
+    { name: "theme-color", content: "#16a34a" },
+  ];
+};
 
 export async function loader(args: LoaderFunctionArgs) {
   const { userId } = await getAuth(args);
@@ -119,6 +128,8 @@ export async function action(args: ActionFunctionArgs) {
 
 export default function BillingPage() {
   const { user, subscription, plans } = useLoaderData<typeof loader>();
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === "submitting";
 
   const searchParams =
     typeof window !== "undefined"
@@ -201,9 +212,10 @@ export default function BillingPage() {
               <input type="hidden" name="intent" value="portal" />
               <button
                 type="submit"
-                className="rounded-lg border border-guard-700/50 px-4 py-2 text-sm font-medium text-guard-300 hover:bg-guard-800/60"
+                disabled={isSubmitting}
+                className="rounded-lg border border-guard-700/50 px-4 py-2 text-sm font-medium text-guard-300 hover:bg-guard-800/60 disabled:opacity-50"
               >
-                Manage Billing in Stripe
+                {isSubmitting ? "Redirecting..." : "Manage Billing in Stripe"}
               </button>
             </Form>
           )}
@@ -272,11 +284,14 @@ export default function BillingPage() {
                       />
                       <button
                         type="submit"
-                        className="w-full rounded-lg bg-catalyst-600 px-4 py-2 text-sm font-medium text-white hover:bg-catalyst-500"
+                        disabled={isSubmitting}
+                        className="w-full rounded-lg bg-catalyst-600 px-4 py-2 text-sm font-medium text-white hover:bg-catalyst-500 disabled:opacity-50"
                       >
-                        {user.plan === "free"
-                          ? `Upgrade to ${plan.name}`
-                          : `Switch to ${plan.name}`}
+                        {isSubmitting
+                          ? "Redirecting..."
+                          : user.plan === "free"
+                            ? `Upgrade to ${plan.name}`
+                            : `Switch to ${plan.name}`}
                       </button>
                     </Form>
                   )}
@@ -286,6 +301,25 @@ export default function BillingPage() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+  return (
+    <div className="rounded-xl border border-red-800/50 bg-red-900/20 p-6">
+      <h2 className="text-lg font-semibold text-red-400">Something went wrong</h2>
+      <p className="mt-2 text-sm text-guard-400">
+        {isRouteErrorResponse(error)
+          ? `${error.status}: ${error.data}`
+          : error instanceof Error
+            ? error.message
+            : "An unexpected error occurred."}
+      </p>
+      <a href="/dashboard" className="mt-4 inline-block text-sm text-catalyst-400 hover:text-catalyst-300">
+        Back to dashboard
+      </a>
     </div>
   );
 }

@@ -1,9 +1,10 @@
 import type {
   LoaderFunctionArgs,
   ActionFunctionArgs,
+  MetaFunction,
 } from "@remix-run/cloudflare";
 import { json, redirect } from "@remix-run/cloudflare";
-import { useLoaderData, useActionData, Form, Link } from "@remix-run/react";
+import { useLoaderData, useActionData, Form, Link, useNavigation, useRouteError, isRouteErrorResponse } from "@remix-run/react";
 import { getAuth } from "@clerk/remix/ssr.server";
 import { getDb } from "~/lib/db.server";
 import { getUserById, getUserByEmail } from "~/services/user.server";
@@ -15,6 +16,14 @@ import {
   addOrganizationMember,
   removeOrganizationMember,
 } from "~/services/organization.server";
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: "Team - Catalyst" },
+    { name: "description", content: "Manage your Catalyst team and organization." },
+    { name: "theme-color", content: "#16a34a" },
+  ];
+};
 
 export async function loader(args: LoaderFunctionArgs) {
   const { userId } = await getAuth(args);
@@ -177,6 +186,8 @@ export default function TeamPage() {
   const { user, organization, members, seatCount, maxSeats } =
     useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === "submitting";
 
   // Not on team plan
   if (user.plan !== "team" && !organization) {
@@ -252,9 +263,10 @@ export default function TeamPage() {
             </div>
             <button
               type="submit"
-              className="rounded-lg bg-catalyst-600 px-4 py-2 text-sm font-medium text-white hover:bg-catalyst-500"
+              disabled={isSubmitting}
+              className="rounded-lg bg-catalyst-600 px-4 py-2 text-sm font-medium text-white hover:bg-catalyst-500 disabled:opacity-50"
             >
-              Create
+              {isSubmitting ? "Creating..." : "Create"}
             </button>
           </Form>
         </div>
@@ -325,9 +337,10 @@ export default function TeamPage() {
               </div>
               <button
                 type="submit"
-                className="rounded-lg bg-catalyst-600 px-4 py-2 text-sm font-medium text-white hover:bg-catalyst-500"
+                disabled={isSubmitting}
+                className="rounded-lg bg-catalyst-600 px-4 py-2 text-sm font-medium text-white hover:bg-catalyst-500 disabled:opacity-50"
               >
-                Invite
+                {isSubmitting ? "Inviting..." : "Invite"}
               </button>
             </Form>
           </div>
@@ -383,6 +396,25 @@ export default function TeamPage() {
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+  return (
+    <div className="rounded-xl border border-red-800/50 bg-red-900/20 p-6">
+      <h2 className="text-lg font-semibold text-red-400">Something went wrong</h2>
+      <p className="mt-2 text-sm text-guard-400">
+        {isRouteErrorResponse(error)
+          ? `${error.status}: ${error.data}`
+          : error instanceof Error
+            ? error.message
+            : "An unexpected error occurred."}
+      </p>
+      <a href="/dashboard" className="mt-4 inline-block text-sm text-catalyst-400 hover:text-catalyst-300">
+        Back to dashboard
+      </a>
     </div>
   );
 }
