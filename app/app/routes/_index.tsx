@@ -19,9 +19,13 @@ export const meta: MetaFunction = () => {
     { property: "og:url", content: "https://catalyst.crashbytes.com" },
     { property: "og:site_name", content: "Catalyst by CrashBytes" },
     { property: "og:type", content: "website" },
+    { property: "og:image", content: "https://api.snapforgehq.com/v1/og?template=blog-post&title=Catalyst&subtitle=AI-Powered+Codebase+Analysis+for+Claude+Code&author=CrashBytes&key=sf_live_8264f94464cc84051b3fbcd48843db5bccb76d7055e5eadccb0665da1f871091" },
+    { property: "og:image:width", content: "1200" },
+    { property: "og:image:height", content: "630" },
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:title", content: "Catalyst - AI-Powered Codebase Analysis for Claude Code" },
     { name: "twitter:description", content: "AI-powered codebase analysis for Claude Code. Generate optimized CLAUDE.md files, skills, agents, MCP configs, and guardrails." },
+    { name: "twitter:image", content: "https://api.snapforgehq.com/v1/og?template=blog-post&title=Catalyst&subtitle=AI-Powered+Codebase+Analysis+for+Claude+Code&author=CrashBytes&key=sf_live_8264f94464cc84051b3fbcd48843db5bccb76d7055e5eadccb0665da1f871091" },
     { name: "theme-color", content: "#16a34a" },
   ];
 };
