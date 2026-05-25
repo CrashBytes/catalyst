@@ -40,6 +40,23 @@
     "LICENSE"
   ],
   "devDependencies": {
-    "dotenv": "^17.3.1"
+    "dotenv": "^17.4.2"
+  },
+  "overrides": {
+    "tar": "^7.5.1",
+    "undici": "^7.16.0",
+    "lodash": "^4.18.1",
+    "js-cookie": "^3.0.6",
+    "defu": "^6.1.5",
+    "path-to-regexp": "^8.4.2",
+    "picomatch": "^4.0.4",
+    "@clerk/shared": "^4.13.1",
+    "@clerk/backend": "^3.4.13",
+    "@clerk/clerk-react": "^5.61.3",
+    "esbuild": "^0.27.0",
+    "estree-util-value-to-estree": "^3.4.0",
+    "qs": "^6.15.2",
+    "vite": "^7.1.13",
+    "yaml": "^2.9.0"
   }
 }
