@@ -22,26 +22,25 @@
   },
   "dependencies": {
     "@clerk/remix": "^4.13.43",
-    "@remix-run/cloudflare": "^2.17.4",
-    "@remix-run/cloudflare-pages": "^2.17.4",
-    "@remix-run/react": "^2.17.4",
-    "isbot": "^5.1.40",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "stripe": "^22.1.1"
+    "@remix-run/cloudflare": "^2.17.5",
+    "@remix-run/cloudflare-pages": "^2.17.5",
+    "@remix-run/react": "^2.17.5",
+    "isbot": "^5.1.42",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "stripe": "^22.2.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260525.1",
+    "@cloudflare/workers-types": "^4.20260610.1",
     "@playwright/test": "^1.60.0",
-    "@remix-run/dev": "^2.17.4",
-    "@types/react": "^19.2.15",
-    "@types/react-dom": "^19.2.3",
-    "autoprefixer": "^10.5.0",
+    "@remix-run/dev": "^2.17.5",
+    "@tailwindcss/vite": "^4.3.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
     "dotenv": "^17.4.2",
-    "postcss": "^8.5.15",
     "tailwindcss": "^4.3.0",
-    "typescript": "^6.0.3",
-    "vite": "^8.0.14",
-    "wrangler": "^4.94.0"
+    "typescript": "^5.9.3",
+    "vite": "^8.0.16",
+    "wrangler": "^3.114.17"
   }
 }

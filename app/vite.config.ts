@@ -3,6 +3,7 @@ import {
   cloudflareDevProxyVitePlugin as cloudflareDevProxy,
 } from "@remix-run/dev";
 import { defineConfig } from "vite";
+import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 
 export default defineConfig({
@@ -13,6 +14,7 @@ export default defineConfig({
   },
   plugins: [
     cloudflareDevProxy(),
+    tailwindcss(),
     remix(),
   ],
 });

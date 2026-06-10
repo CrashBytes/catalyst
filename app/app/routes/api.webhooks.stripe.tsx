@@ -35,7 +35,7 @@ export async function action(args: ActionFunctionArgs) {
 
   const env = args.context.cloudflare.env as unknown as Env;
   const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-    apiVersion: "2024-12-18.acacia",
+    apiVersion: "2026-05-27.dahlia",
   });
 
   const body = await args.request.text();
@@ -88,7 +88,8 @@ export async function action(args: ActionFunctionArgs) {
         break;
       }
 
-      const priceId = subscription.items.data[0]?.price?.id;
+      const subscriptionItem = subscription.items.data[0];
+      const priceId = subscriptionItem?.price?.id;
       const plan = determinePlan(env, priceId);
 
       await upsertSubscription(db, {
@@ -97,10 +98,10 @@ export async function action(args: ActionFunctionArgs) {
         stripePriceId: priceId || "",
         status: subscription.status,
         currentPeriodStart: new Date(
-          subscription.current_period_start * 1000
+          (subscriptionItem?.current_period_start ?? 0) * 1000
         ).toISOString(),
         currentPeriodEnd: new Date(
-          subscription.current_period_end * 1000
+          (subscriptionItem?.current_period_end ?? 0) * 1000
         ).toISOString(),
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
       });
@@ -124,7 +125,8 @@ export async function action(args: ActionFunctionArgs) {
 
       if (!user) break;
 
-      const priceId = subscription.items.data[0]?.price?.id;
+      const subscriptionItem = subscription.items.data[0];
+      const priceId = subscriptionItem?.price?.id;
       const plan = determinePlan(env, priceId);
 
       await upsertSubscription(db, {
@@ -133,10 +135,10 @@ export async function action(args: ActionFunctionArgs) {
         stripePriceId: priceId || "",
         status: subscription.status,
         currentPeriodStart: new Date(
-          subscription.current_period_start * 1000
+          (subscriptionItem?.current_period_start ?? 0) * 1000
         ).toISOString(),
         currentPeriodEnd: new Date(
-          subscription.current_period_end * 1000
+          (subscriptionItem?.current_period_end ?? 0) * 1000
         ).toISOString(),
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
       });
