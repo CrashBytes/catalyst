@@ -25,22 +25,22 @@
     "@remix-run/cloudflare": "^2.17.5",
     "@remix-run/cloudflare-pages": "^2.17.5",
     "@remix-run/react": "^2.17.5",
-    "isbot": "^5.1.42",
+    "isbot": "^5.1.43",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "stripe": "^22.2.0"
+    "stripe": "^22.2.1"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260610.1",
-    "@playwright/test": "^1.60.0",
+    "@cloudflare/workers-types": "^4.20260615.1",
+    "@playwright/test": "^1.61.0",
     "@remix-run/dev": "^2.17.5",
-    "@tailwindcss/vite": "^4.3.0",
+    "@tailwindcss/vite": "^4.3.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "dotenv": "^17.4.2",
-    "tailwindcss": "^4.3.0",
+    "tailwindcss": "^4.3.1",
     "typescript": "^5.9.3",
     "vite": "^8.0.16",
-    "wrangler": "^3.114.17"
+    "wrangler": "^4.100.0"
   }
 }
