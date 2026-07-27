@@ -60,7 +60,10 @@
     "turbo-stream": "^3.0.0",
     "vite": "^8.0.16",
     "yaml": "^2.9.0",
-    "sharp": "^0.35.0"
+    "sharp": "^0.35.0",
+    "postcss": "^8.5.18",
+    "js-yaml": "^4.3.0",
+    "brace-expansion": "^2.1.2"
   },
   "allowScripts": {
     "sharp": true
